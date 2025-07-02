@@ -209,7 +209,7 @@ samtools index -@ -b b24.aln.sort.bam
 
 jgi_summarize_bam_contig_depths --outputDepth b01_depth.txt b01.aln.sort.bam
 
-metabat2 -m 1500 -t 15 -i ~/shotgun/assembly/b01_assembly.fasta -a b21_depth.txt -o .
+metabat2 -m 1500 -t 15 -i ~/shotgun/assembly/b01_assembly.fasta -a b01_depth.txt -o b01
 
 conda activate checkm
 
