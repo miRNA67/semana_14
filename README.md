@@ -145,6 +145,7 @@ seqkit stats -a -j 15 *.fastq > b01_contamination_stats.txt
 
 ## 5. Identificación del perfil taxonómico a partir de los archivos FASTQ
 
+```bash
 cd ~/shotgun/
 
 mkdir taxonomy
@@ -156,7 +157,16 @@ kraken2 -db /data/db/kraken2/k2_pluspf --threads 15 --use-names cd ~/shotgun/con
 kreport2krona.py -r b01.report -o b01.krona
 
 ktImportText b01.krona -o b01_krona_report.html
-![image](https://github.com/user-attachments/assets/b893f6f3-5f98-4ecc-85d7-822e8a48946c)
+```
+
+```bash
+# Exportar el archivo HTML y visualizarlo
+
+<img width="678" alt="image" src="https://github.com/user-attachments/assets/ab5980cc-7f58-4033-9bab-e3c019ba930c" />
+```
+
+
+
 
 
 
