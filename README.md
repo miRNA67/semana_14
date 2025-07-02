@@ -11,8 +11,9 @@ Al finalizar la sesión, el estudiante conoce y utiliza herramientas bioinformá
 3. Limpieza de los archivos FASTQ
 4. Eliminación de la contaminación en los archivos FASTQ
 5. Identificación del perfil taxonómico a partir de los archivos FASTQ 
-6. Ensamblaje de metagenomas 
-7. Anotación de metagenomas 
+6. Ensamblaje de metagenomas
+7. Binning
+8. Anotación de metagenomas 
 
 ## Programas requeridos:
 
@@ -152,7 +153,7 @@ mkdir taxonomy
 
 cd taxonomy
 
-kraken2 -db /data/db/kraken2/k2_pluspf --threads 15 --use-names cd ~/shotgun/contamination/b01_clean_hsa.fastq --output b01.kraken –report b01.report
+kraken2 -db /data/db/kraken2/k2_pluspf --threads 15 --use-names cd ~/shotgun/contamination/b01_clean_hsa.fastq --output b01.kraken --report b21.report
 
 kreport2krona.py -r b01.report -o b01.krona
 
@@ -173,6 +174,47 @@ ktImportText b01.krona -o b01_krona_report.html
 
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/7247fdcb-6c44-4c80-a1ea-39375ceb0c26" />
    
+## 6. Ensamblaje de metagenomas 
+
+```bash
+cd ~/shotgun/
+
+mkdir assembly
+
+cd assembly
+
+flye --nano-hq ~/shotgun/contamination/b01_clean_hsa.fastq --meta --threads 15 --out-dir b01
+
+mv b01/assembly.fasta b01_assembly.fasta
+
+metaquast.py -m 1000 --gene-finding -r /data/BL16/nanopore/shotgun_24_1/sacha/GCA_000146045.2_R64_genomic.fna -o b01_assemble_stats b01_assembly.fasta
+```
+
+## 7. Binning
+
+cd ~/shotgun/
+
+mkdir binning
+
+cd binning
+
+minimap2 -t 15 -ax map-ont ~/shotgun/assembly/b01_assembly.fasta ~/shotgun/contamination/b01_clean_hsa.fastq | samtools sort -O BAM - > b01.aln.sort.bam
+
+samtools index -@ -b b24.aln.sort.bam
+
+jgi_summarize_bam_contig_depths --outputDepth b01_depth.txt b01.aln.sort.bam
+
+metabat2 -m 1500 -t 15 -i ~/shotgun/assembly/b01_assembly.fasta -a b21_depth.txt -o .
+
+conda activate checkm
+
+checkm lineage_wf -t 15 -x fa . --tab_table -f b01_checkm_out.txt .
+
+## 8. Anotación de metagenomas
+
+
+
+
 
 
 
