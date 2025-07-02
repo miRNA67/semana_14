@@ -163,7 +163,7 @@ ktImportText b01.krona -o b01_krona_report.html
 # Exportar el archivo HTML y visualizarlo
 ```
 
-<img width="678" alt="image" src="https://github.com/user-attachments/assets/ab5980cc-7f58-4033-9bab-e3c019ba930c" />
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/ab5980cc-7f58-4033-9bab-e3c019ba930c" />
 
 
 
