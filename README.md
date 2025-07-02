@@ -13,7 +13,11 @@ Al finalizar la sesión, el estudiante conoce y utiliza herramientas bioinformá
 5. Identificación del perfil taxonómico a partir de los archivos FASTQ 
 6. Ensamblaje de metagenomas
 7. Binning
-8. Anotación de metagenomas 
+8. Anotación global del ensamblaje metagenómico
+9. Identificación de genes de resistencia y virulencia
+10. Identificación de plásmidos
+11. Identificación de rutas metabólicas
+12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios
 
 ## Programas requeridos:
 
@@ -192,6 +196,7 @@ metaquast.py -m 1000 --gene-finding -r /data/BL16/nanopore/shotgun_24_1/sacha/GC
 
 ## 7. Binning
 
+```bash
 cd ~/shotgun/
 
 mkdir binning
@@ -209,75 +214,121 @@ metabat2 -m 1500 -t 15 -i ~/shotgun/assembly/b01_assembly.fasta -a b21_depth.txt
 conda activate checkm
 
 checkm lineage_wf -t 15 -x fa . --tab_table -f b01_checkm_out.txt .
-
-## 8. Anotación de metagenomas
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 5. Obtención del archivo BIOM
-
-```bash
-awk 'BEGIN{ FS = OFS = "\t" } { print "", $0 }' emu-combined-tax_id.tsv > masato_its_emu.tsv
-
-awk '{if (NR == 1) {print $0} else {print NR-2, $0}}' masato_its_emu.tsv > tmp && mv tmp masato_its_emu.tsv
-
-tr '\t' ',' < masato_its_emu.tsv | sed 's/_nanofilt.fastq//g' > masato_its_emu.csv
-
-awk 'BEGIN{FS=OFS=","}{sub(/\r$/,"");print $1,$9,$8,$7,$6,$5,$4,$3,$2,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19}' masato_its_emu.csv > tmp && mv tmp masato_its_emu.csv
-
-sed 's/,$//' masato_its_emu.csv | sed 's/superkingdom/Kingdom/g' | sed 's/phylum/Phylum/g' | sed 's/class/Class/g' | sed 's/order/Order/g' | sed 's/family/Family/g' | sed 's/genus/Genus/g' | sed 's/species/Species/g' | sed 's/_its.fastq//g' > masato_its_emu_final.csv
-
-## Crear en Windows la carpeta metataxonomic, copiar el archivo CSV final y descomprimir el archivo biom.rar que está en el aula virtual.
-
-## Abrir RStudio y seguir las indicaciones del docente.
-
-## Cargar el archivo generado en el programa Easy16S (https://shiny.migale.inrae.fr/app/easy16S) y exportarlo en BIOM (junto con su metadata en CSV).
 ```
 
-## 6. Análisis de diversidad  
-
-Abrir el archivo BIOM en el programa microbiomeanalyst(https://www.microbiomeanalyst.ca/MicrobiomeAnalyst/ModuleView.xhtml) y seguir las indicaciones del docente
-
-## 7. Analisis metataxonómico de las secuencias 16S
+## 8. Anotación global del ensamblaje metagenómico
 
 ```bash
-La localización de las secuencias 16S esta en /data/2025_1/sequencing/metataxonomica/16s_curso/
+cd ~/shotgun/
 
-Distribución de los barcodes: Grupo 1: b01, b02, b03, b04, b18 | Grupo 2: b05, b06, b07, b08, b17 | Grupo 3: b09, b10, b11, b12, b19 | Grupo 4: b13, b14, b15, b16, b20
+mkdir annotation
 
-Realizar la visualización de calidad de las secuencias de sus respectivos barcodes
+cd annotation
 
-Realizar la limpieza de los FASTQ utilizando los siguientes criterios: un Q minimo de 10, una longitud minima de secuencia de 1000 y una longitud máxima de 2000
+conda activate pgcgap
 
-Calcular el número total de lecturas limpias
-
-Realizar el análisis metataxonómico de sus respectivos barcodes utilizando la base de datos localizada en /data/db/emu/emu/
-
-Copiar los archivos *_16s.fastq_rel-abundance.tsv a la carpeta /data/2025_1/16s_alumnos
-
-Copiar los archivos *_16s.fastq_rel-abundance.tsv que estan en la carpeta /data/2025_1/16s_alumnos segun el siguiente esquema: Grupo 1 copiara los archivos del Grupo 2, Grupo 2 copiara los archivos del Grupo 4, el Grupo 3 copiara los archivos del Grupo 1, Grupo 4 copiara los archivos del Grupo 3
-
-Generar el archivo emu-combined-tax_id.tsv y su respectivo archivo BIOM (reemplazar masato_its por masato_16s)
-
-Realizar el analisis de diversidad
+prokka --outdir prokka --cpus 15 --metagenome --prefix b01 ~/shotgun/assembly/b01_assembly.fasta
 ```
+
+### Identificar los códigos y descripción de las rutas metabólicas presentes en los metagenomas con el programa minpath:
+
+```bash
+egrep "eC_number=" prokka/b01.gff |cut -f9 | cut -f1,2 -d ';'| sed 's/ID=//g'| sed 's/;eC_number=/\t/g' > b01_ec.txt
+
+python /data/db/minpath/MinPath.py -any b01_ec.txt -map /data/db/minpath/data/ec2path -report b01_ec.report
+```
+
+### Visualizar las rutas metabólicas más relevantes en MetaCyc (https://metacyc.org/):
+
+<img width="543" alt="image" src="https://github.com/user-attachments/assets/e6ef2663-f50a-4197-af0e-23f4279099d3" />
+
+<img width="445" alt="image" src="https://github.com/user-attachments/assets/e1edce45-58bd-4bfd-a4d3-500420b88c17" />
+
+<img width="694" alt="image" src="https://github.com/user-attachments/assets/d0ed055d-6987-40e0-8bb0-9f81edb65919" />
+
+## 9. Identificación de genes de resistencia y virulencia
+
+```bash
+cd ~/shotgun/annotation
+
+mkdir abricate
+
+cd abricate
+
+conda activate abricate
+
+abricate --db vfdb ~/shotgun/annotation/prokka/b01.fna > b01_vfdb.tab
+```
+
+```bash
+cd ~/shotgun/annotation
+
+mkdir rgi
+
+cd rgi
+
+conda activate resistance
+
+rgi load --card_json /data/db/card/card.json  --local
+
+rgi main --input_sequence ~/shotgun/annotation/prokka/b01.fna --output_file b01_rgi --clean --local --num_threads 15
+```
+
+## 10. Identificación de plásmidos
+
+```bash
+cd ~/shotgun/annotation
+
+conda activate mob
+
+mkdir plasmid
+
+cd plasmid
+
+mob_recon --infile ~/shotgun/annotation/prokka/b01.fna --outdir b01_plasmid
+```
+
+## 11. Identificación de rutas metabólicas
+
+### Ir a la pagina web de KAAS (https://www.genome.jp/kegg/kaas/)
+
+### Hacer clic en KAAS job request
+
+<img width="681" alt="image" src="https://github.com/user-attachments/assets/79333efb-e92d-4ec5-ad25-1cdc4ba7be86" />
+
+### Clic en seleccionar archivo y escoger el archivo FAA del genoma, colocar en query name e e-mail address lo que corresponda, seleccionar en GENES data set la opción for Prokaryotes, y luego presionar en Compute
+
+<img width="521" alt="image" src="https://github.com/user-attachments/assets/a9bd91b6-8d9e-4ded-b9e7-706373a7ad6a" />
+
+### Revisar su e-mail y dar clic en Submit
+
+### Hacer clic en html
+
+<img width="287" alt="image" src="https://github.com/user-attachments/assets/4e8a1196-68d9-4560-8028-052c5fd9023d" />
+
+### Explorar los resultados
+
+<img width="330" alt="image" src="https://github.com/user-attachments/assets/1bcea43b-3b75-4916-907a-6fd170767772" />
+
+### Explorar los resultados
+
+<img width="427" alt="image" src="https://github.com/user-attachments/assets/3c0a54d4-f110-4ac7-b3b1-ee38251c2b61" />
+
+<img width="694" alt="image" src="https://github.com/user-attachments/assets/0e07f44b-355d-40e2-b5a3-613aaeb8f993" />
+
+## 12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios
+
+### Ir a la pagina web de antiSMASH (https://antismash.secondarymetabolites.org/#!/start)
+
+### Clic en Upload file y escoger el archivo FASTA del genoma, colocar el Detection strictness en strict, seleccionar All on la opción Extra features, y luego presionar en Submit
+
+<img width="534" alt="image" src="https://github.com/user-attachments/assets/3f1b86f4-3628-4f25-a5cf-5d261ba743df" />
+
+### Explorar los resultados
+
+<img width="509" alt="image" src="https://github.com/user-attachments/assets/06580a7f-3c4d-44d5-95ad-82f9397a69f1" />
+
+<img width="695" alt="image" src="https://github.com/user-attachments/assets/6b030610-5686-4ebc-acd7-cd9be363f14d" />
 
 # Bitácora de la práctica:
 
@@ -285,10 +336,14 @@ Realizar el analisis de diversidad
 
 ```bash
 •	Flujograma de todo el pipeline realizado 
-•	Valores de calidad y numero de lecturas en la data cruda y después de la limpieza 
-•	Análisis de abundancia en todos los niveles taxonómicos
-•	Análisis de diversidad alfa (seleccionar 3 métricas) a nivel de género y familia 
-•	Análisis de beta diversidad (PCoA y NMDS) a nivel de género y familia
+•	Valores de calidad y numero de lecturas en la data cruda y después de la limpieza
+•	Analisis taxonómico 
+•	Estadisticas del ensamblaje
+•	Valores de integridad y contaminación de los bins obtenidos
+•	Estadisticas de la anotación global
+•	Rutas metabolicas mas abundantes
+•	Genes de resistencia y virulencia identificados
+•	Plasmidos identificados
 ```
 
 ## Discusión
