@@ -165,7 +165,14 @@ ktImportText b01.krona -o b01_krona_report.html
 
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/ab5980cc-7f58-4033-9bab-e3c019ba930c" />
 
+```bash
+# Exportar el archivo REPORT y visualizar en el programa pavian (https://fbreitwieser.shinyapps.io/pavian/)
+```
 
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/b4807b30-5959-4206-812b-b45fe612fe63" />
+
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/7247fdcb-6c44-4c80-a1ea-39375ceb0c26" />
+   
 
 
 
