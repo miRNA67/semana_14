@@ -129,7 +129,7 @@ gunzip -c b01_porechop.fastq.gz | NanoFilt -q 10 --length 1000 | gzip > b01_nano
 
 conda activate shotgun
 
-seqkit stats -a -j 15 *.fastq > b01_trim_stats.txt
+seqkit stats -a -j 15 *.fastq.gz > b01_trim_stats.txt
 ```
 
 ## 4. Eliminación de la contaminación en los archivos FASTQ 
