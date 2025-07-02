@@ -11,13 +11,13 @@ Al finalizar la sesión, el estudiante conoce y utiliza herramientas bioinformá
 3. Limpieza de los archivos FASTQ
 4. Eliminación de la contaminación en los archivos FASTQ
 5. Identificación del perfil taxonómico a partir de los archivos FASTQ 
-6. Ensamblaje de metagenomas
-7. Binning
-8. Anotación global del ensamblaje metagenómico
-9. Identificación de genes de resistencia y virulencia
-10. Identificación de plásmidos
-11. Identificación de rutas metabólicas
-12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios
+6. Ensamblaje de contigs
+7. Binning (Agrupación y evaluación de MAGs)
+8. Anotación funcional global de los contigs
+9. Identificación de genes de resistencia y virulencia en los contigs
+10. Identificación de plásmidos en los contigs
+11. Identificación de rutas metabólicas en los contigs
+12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios en los contigs
 
 ## Programas requeridos:
 
@@ -125,7 +125,7 @@ cd trim
 
 porechop -t 15 -i /data/2025_1/sequencing/shotgun/fastq/b01.fastq -o b01_porechop.fastq.gz
 
-gunzip -c b01_porechop.fastq.gz | NanoFilt -q 10 --length 200 | gzip > b01_nanofilt.fastq.gz
+gunzip -c b01_porechop.fastq.gz | NanoFilt -q 10 --length 1000 | gzip > b01_nanofilt.fastq.gz
 
 conda activate shotgun
 
@@ -178,7 +178,7 @@ ktImportText b01.krona -o b01_krona_report.html
 
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/7247fdcb-6c44-4c80-a1ea-39375ceb0c26" />
    
-## 6. Ensamblaje de metagenomas 
+## 6. Ensamblaje de contigs
 
 ```bash
 cd ~/shotgun/
@@ -194,7 +194,7 @@ mv b01/assembly.fasta b01_assembly.fasta
 metaquast.py -m 1000 --gene-finding -r /data/BL16/nanopore/shotgun_24_1/sacha/GCA_000146045.2_R64_genomic.fna -o b01_assemble_stats b01_assembly.fasta
 ```
 
-## 7. Binning
+## 7. Binning (Agrupación y evaluación de MAGs)
 
 ```bash
 cd ~/shotgun/
@@ -216,7 +216,7 @@ conda activate checkm
 checkm lineage_wf -t 15 -x fa . --tab_table -f b01_checkm_out.txt .
 ```
 
-## 8. Anotación global del ensamblaje metagenómico
+## 8. Anotación funcional global de los contigs
 
 ```bash
 cd ~/shotgun/
@@ -230,7 +230,7 @@ conda activate pgcgap
 prokka --outdir prokka --cpus 15 --metagenome --prefix b01 ~/shotgun/assembly/b01_assembly.fasta
 ```
 
-### Identificar los códigos y descripción de las rutas metabólicas presentes en los metagenomas con el programa minpath:
+### Identificar los códigos y descripción de las rutas metabólicas presentes en los contigs con el programa minpath:
 
 ```bash
 egrep "eC_number=" prokka/b01.gff |cut -f9 | cut -f1,2 -d ';'| sed 's/ID=//g'| sed 's/;eC_number=/\t/g' > b01_ec.txt
@@ -246,7 +246,7 @@ python /data/db/minpath/MinPath.py -any b01_ec.txt -map /data/db/minpath/data/ec
 
 <img width="694" alt="image" src="https://github.com/user-attachments/assets/d0ed055d-6987-40e0-8bb0-9f81edb65919" />
 
-## 9. Identificación de genes de resistencia y virulencia
+## 9. Identificación de genes de resistencia y virulencia en los contigs
 
 ```bash
 cd ~/shotgun/annotation
@@ -274,7 +274,7 @@ rgi load --card_json /data/db/card/card.json  --local
 rgi main --input_sequence ~/shotgun/annotation/prokka/b01.fna --output_file b01_rgi --clean --local --num_threads 15
 ```
 
-## 10. Identificación de plásmidos
+## 10. Identificación de plásmidos en los contigs
 
 ```bash
 cd ~/shotgun/annotation
@@ -288,7 +288,7 @@ cd plasmid
 mob_recon --infile ~/shotgun/annotation/prokka/b01.fna --outdir b01_plasmid
 ```
 
-## 11. Identificación de rutas metabólicas
+## 11. Identificación de rutas metabólicas en los contigs
 
 ### Ir a la pagina web de KAAS (https://www.genome.jp/kegg/kaas/)
 
@@ -316,7 +316,7 @@ mob_recon --infile ~/shotgun/annotation/prokka/b01.fna --outdir b01_plasmid
 
 <img width="694" alt="image" src="https://github.com/user-attachments/assets/0e07f44b-355d-40e2-b5a3-613aaeb8f993" />
 
-## 12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios
+## 12. Identificación de clústeres de genes de biosíntesis de metabolitos secundarios en los contigs
 
 ### Ir a la pagina web de antiSMASH (https://antismash.secondarymetabolites.org/#!/start)
 
@@ -339,20 +339,19 @@ mob_recon --infile ~/shotgun/annotation/prokka/b01.fna --outdir b01_plasmid
 •	Valores de calidad y numero de lecturas en la data cruda y después de la limpieza
 •	Analisis taxonómico 
 •	Estadisticas del ensamblaje
-•	Valores de integridad y contaminación de los bins obtenidos
+•	Valores de integridad y contaminación de los MAGs obtenidos
 •	Estadisticas de la anotación global
-•	Rutas metabolicas mas abundantes
+•	Rutas metabólicas más abundantes
 •	Genes de resistencia y virulencia identificados
-•	Plasmidos identificados
+•	Plásmidos identificados
+•	Clústeres de metabólitos identificados
 ```
 
-## Discusión
+## Para el trabajo final
 
 ```bash
-•	Explicar que métrica de la diversidad alfa representa mejor la diversidad de las muestras
-•	Explicar cual metodo de ordinación de la diversidad beta explica mejor la similaridad/disimilaridad de las muestras
+•	Análisis de la anotación de los 3 MAGs con mejor calidad
 ```
-
 
 
 
